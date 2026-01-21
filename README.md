@@ -1,9 +1,7 @@
-# Users API – Fiap Cloud Games
+# Payments API – Fiap Cloud Games
 
 Microsserviço responsável por:
-- Cadastro de usuários
-- Autenticação
-- Publicação de eventos de criação de usuário
+- Responsável pelo processamento de pagamentos de forma assíncrona.
 
 ---
 
