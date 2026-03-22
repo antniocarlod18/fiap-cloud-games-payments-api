@@ -4,7 +4,9 @@ using FiapCloudGamesPayments.Domain.Entities;
 using FiapCloudGamesPayments.Domain.Enums;
 using FiapCloudGamesPayments.Domain.Exceptions;
 using FiapCloudGamesPayments.Domain.Repositories;
+using MassTransit;
 using MassTransit.Transports;
+using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace FiapCloudGamesPayments.Application.Services;
