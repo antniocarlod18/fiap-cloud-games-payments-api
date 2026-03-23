@@ -7,6 +7,7 @@ namespace FiapCloudGamesPayments.Domain.Enums
     public enum PaymentStatusEnum
     {
         Approved,
+        Processing,
         Rejected
     }
 }

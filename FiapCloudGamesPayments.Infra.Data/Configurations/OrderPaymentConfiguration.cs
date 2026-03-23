@@ -22,6 +22,12 @@ internal class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment
         builder.Property(o => o.Status)
             .IsRequired();
 
+        builder.Property(o => o.Method)
+            .IsRequired();
+
+        builder.Property(o => o.Currency)
+            .IsRequired();
+
         builder.Property(o => o.Price)
             .IsRequired()
             .HasColumnType("decimal(10,2)");

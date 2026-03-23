@@ -1,6 +1,7 @@
-﻿using FiapCloudGamesPayments.Domain.Enums;
-using FiapCloudGamesPayments.Domain.Entities;
+﻿using FiapCloudGamesPayments.Domain.Entities;
+using FiapCloudGamesPayments.Domain.Enums;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace FiapCloudGamesPayments.Domain.Events
 {
@@ -9,12 +10,16 @@ namespace FiapCloudGamesPayments.Domain.Events
         public DateTime OccurredOn { get; private set; }
         public Guid OrderId { get; private set; }
         public Guid UserId { get; private set; }
-        public PaymentStatusEnum Status { get; set; }
-        public OrderPaymentCreatedDomainEvent(Guid orderId, Guid userId, PaymentStatusEnum status)
+        public decimal Price { get; set; }
+        public string Currency { get; set; } = "BRL";
+        public string Method { get; set; } = string.Empty;
+        public OrderPaymentCreatedDomainEvent(Guid orderId, Guid userId, decimal price, string currency, string method)
         {
             OrderId = orderId;
             UserId = userId;
-            Status = status;
+            Price = price;
+            Currency = currency;
+            Method = method;
             OccurredOn = DateTime.UtcNow;
         }    
     }

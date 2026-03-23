@@ -1,4 +1,5 @@
 ﻿using FiapCloudGamesPayments.Application.Dtos;
+using FiapCloudGamesPayments.Application.Helpers;
 using FiapCloudGamesPayments.Application.Services.Interfaces;
 using FiapCloudGamesPayments.Domain.Entities;
 using FiapCloudGamesPayments.Domain.Enums;
@@ -33,14 +34,10 @@ public class OrderPaymentService : IOrderPaymentService
             _logger.LogInformation("Payment already exists for OrderId: {OrderId}. Aborting processing.", orderId);
             throw new ResourceAlreadyExistsException(nameof(OrderPayment));
         }
-
-        var status = DefineStatus(price);
-        var newOrderPayment = new OrderPayment(orderId, userId, status, price);
+        var newOrderPayment = new OrderPayment(orderId, userId, PaymentStatusEnum.Processing, price, "BRL", PaymentHelper.GetRandomPaymentMethod());
 
         await _unitOfWork.OrderPaymentsRepo.AddAsync(newOrderPayment);
         await _unitOfWork.Commit();
-
-        _logger.LogInformation("Payment processed for OrderId: {OrderId}, Status: {Status}", orderId, status);
     }
 
     public async Task<OrderPaymentResponseDto?> GetAsync(Guid orderId, Guid idUser, string role)
@@ -55,14 +52,5 @@ public class OrderPaymentService : IOrderPaymentService
 
         _logger.LogInformation("Payment with OrderId {orderId} retrieved", orderId);
         return orderPayment;
-    }
-
-    private PaymentStatusEnum DefineStatus(decimal price)
-    {
-        // Exemplo: pagamentos acima de 1000 falham
-        if (price > 1000)
-            return PaymentStatusEnum.Rejected;
-
-        return PaymentStatusEnum.Approved;
     }
 }

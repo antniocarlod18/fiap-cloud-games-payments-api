@@ -13,8 +13,9 @@ public class TracingSendFilter<T> : IFilter<SendContext<T>> where T : class
 
         if (transaction != null)
         {
-            // padrão W3C
-            var traceparent = transaction.OutgoingDistributedTracingData.SerializeToString();
+            var traceparent = transaction
+                .OutgoingDistributedTracingData
+                .SerializeToString();
 
             context.Headers.Set("traceparent", traceparent);
         }
