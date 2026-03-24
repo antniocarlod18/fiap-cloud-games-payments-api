@@ -27,7 +27,6 @@ namespace FiapCloudGamesPayments.Api.Extensions
 
                     cfg.UseMessageRetry(r => r.Immediate(2));
                     cfg.ConfigureEndpoints(context);
-                    cfg.ReceiveEndpoint("payment-queue", e => { });
                 });
 
 

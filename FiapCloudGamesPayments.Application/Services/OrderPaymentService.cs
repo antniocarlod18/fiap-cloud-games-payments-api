@@ -45,7 +45,7 @@ public class OrderPaymentService : IOrderPaymentService
         _logger.LogInformation("Getting Payment by id {OrderId}", orderId);
         var orderPayment = await _unitOfWork.OrderPaymentsRepo.GetByOrderAsync(orderId);
 
-        if (orderPayment != null || (orderPayment.UserId != idUser && role != "Admin"))
+        if (orderPayment == null || (orderPayment.UserId != idUser && role != "Admin"))
         {
             throw new ResourceNotFoundException(nameof(OrderPayment));
         }        

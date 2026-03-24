@@ -1,20 +1,25 @@
-﻿using FiapCloudGames.Contracts.IntegrationEvents;
+﻿using Azure.Messaging.ServiceBus;
+using FiapCloudGames.Contracts.IntegrationEvents;
 using FiapCloudGamesPayments.Domain.Events;
 using MassTransit;
 using MassTransit.Middleware;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FiapCloudGamesPayments.Application.EventHandler
 {
     public class OrderPaymentCreatedEventHandler : INotificationHandler<OrderPaymentCreatedDomainEvent>
     {
-        private readonly ISendEndpointProvider _sendEndpointProvider;
+        private readonly ServiceBusSender _sender;
         private readonly ILogger<OrderPaymentCreatedEventHandler> _logger;
 
-        public OrderPaymentCreatedEventHandler(ISendEndpointProvider sendEndpointProvider, ILogger<OrderPaymentCreatedEventHandler> logger)
+        public OrderPaymentCreatedEventHandler(IConfiguration configuration, ILogger<OrderPaymentCreatedEventHandler> logger)
         {
-            this._sendEndpointProvider = sendEndpointProvider;
+            var client = new ServiceBusClient(configuration["ServiceBus:ConnectionString"]);
+            this._sender = client.CreateSender(configuration["ServiceBus:QueueName"]);
             this._logger = logger;
         }
 
@@ -25,20 +30,22 @@ namespace FiapCloudGamesPayments.Application.EventHandler
 
             try
             {
-                var endpoint = await _sendEndpointProvider.GetSendEndpoint(
-                    new Uri("queue:payment-queue")
-                );
-
-                await endpoint.Send(new
+                var payment = new PaymentMessage
                 {
-                    notification.OrderId,
-                    notification.UserId,
-                    notification.Price,
-                    notification.Currency,
-                    notification.Method
-                });
+                    OrderId = notification.OrderId.ToString(),
+                    UserId = notification.UserId.ToString(),
+                    Price = notification.Price,
+                    Currency = notification.Currency,
+                    Method = notification.Method
+                };
 
-                _logger.LogInformation("Published PaymentProcessedIntegrationEvent for OrderId: {OrderId}", notification.OrderId);
+                var json = JsonSerializer.Serialize(payment);
+
+                var message = new ServiceBusMessage(json);
+
+                await _sender.SendMessageAsync(message);
+
+                _logger.LogInformation("Sent PaymentMessage to Azure Service Bus queue 'payment-queue' for OrderId: {OrderId}", notification.OrderId);
             }
             catch (Exception ex)
             {
@@ -48,5 +55,23 @@ namespace FiapCloudGamesPayments.Application.EventHandler
 
             return;
         }
+    }
+
+    public class PaymentMessage
+    {
+        [JsonPropertyName("orderId")]
+        public string OrderId { get; set; } = string.Empty;
+
+        [JsonPropertyName("userId")]
+        public string UserId { get; set; } = string.Empty;
+
+        [JsonPropertyName("price")]
+        public decimal Price { get; set; }
+
+        [JsonPropertyName("currency")]
+        public string Currency { get; set; } = "BRL";
+
+        [JsonPropertyName("method")]
+        public string Method { get; set; } = string.Empty;
     }
 }

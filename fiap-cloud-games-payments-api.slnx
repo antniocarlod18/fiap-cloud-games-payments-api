@@ -4,4 +4,5 @@
   <Project Path="FiapCloudGamesPayments.Application/FiapCloudGamesPayments.Application.csproj" Id="59391223-273d-4daa-8d96-694b17a43ef9" />
   <Project Path="FiapCloudGamesPayments.Domain/FiapCloudGamesPayments.Domain.csproj" Id="2e1fa373-35cb-499a-8fc7-368e9cd549e2" />
   <Project Path="FiapCloudGamesPayments.Infra.Data/FiapCloudGamesPayments.Infra.Data.csproj" Id="31498483-ba81-4cbc-bae4-0f62187a5a09" />
+  <Project Path="FiapCloudGamesPayments.Test/FiapCloudGamesPayments.Test.csproj" Id="fc9e2341-bf2d-4f54-ae4d-c1dd6397ba75" />
 </Solution>
