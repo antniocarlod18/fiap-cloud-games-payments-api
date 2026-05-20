@@ -1,0 +1,137 @@
+# Deploy to Azure Kubernetes Service
+# Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: '6b92e186-ec08-434c-a0b1-b7776ffd98d9'
+  imageRepository: 'antniocarlodfiapcloudgamespaymentsapi'
+  containerRegistry: 'fgcacr13245.azurecr.io'
+  dockerfilePath: '**/Dockerfile'
+  tag: '$(Build.BuildId)'
+  imagePullSecret: 'fgcacr132459429cb4c-auth'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+
+stages:
+- stage: Build
+  displayName: Build and Unit Tests
+
+  jobs:
+  - job: Build
+
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+
+    - task: UseDotNet@2
+      inputs:
+        packageType: sdk
+        version: '10.0.x'
+
+    - task: DotNetCoreCLI@2
+      displayName: Restore
+      inputs:
+        command: restore
+        projects: '**/*.csproj'
+
+    - task: DotNetCoreCLI@2
+      displayName: Build
+      inputs:
+        command: build
+        projects: '**/*.csproj'
+        arguments: '--configuration Release'
+
+    - task: DotNetCoreCLI@2
+      displayName: Run Unit Tests
+      inputs:
+        command: test
+        projects: '**/*Tests.csproj'
+        arguments: '--configuration Release --collect:"XPlat Code Coverage"'
+
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        buildContext: '.'
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Kubernetes Manifests
+
+      inputs:
+        targetPath: 'FiapCloudGamesPayments.Api/k8s'
+        artifact: manifests  
+
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    pool:
+      vmImage: $(vmImageName)
+    environment: 'antniocarlod18fiapcloudgamespaymentsapi.default'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifact: manifests
+              path: $(Pipeline.Workspace)/manifests
+
+          - task: replacetokens@5
+            displayName: Replace Tokens
+
+            inputs:
+              rootDirectory: '$(Pipeline.Workspace)/manifests'
+
+              targetFiles: '**/*.yaml'
+
+              encoding: 'auto'
+
+              writeBOM: true
+
+              actionOnMissing: 'warn'
+
+              keepToken: false
+
+              tokenPattern: 'azpipelines'
+
+          - task: KubernetesManifest@0
+            displayName: Create imagePullSecret
+            inputs:
+              action: createSecret
+              secretName: $(imagePullSecret)
+              dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+          - task: KubernetesManifest@0
+            displayName: Deploy to Kubernetes cluster
+            inputs:
+              action: deploy
+              manifests: |
+                $(Pipeline.Workspace)/manifests/configmap.yaml
+                $(Pipeline.Workspace)/manifests/secret.yaml
+                $(Pipeline.Workspace)/manifests/migration.yaml
+                $(Pipeline.Workspace)/manifests/deployment.yaml
+                $(Pipeline.Workspace)/manifests/service.yaml
+              imagePullSecrets: |
+                $(imagePullSecret)
+              containers: |
+                $(containerRegistry)/$(imageRepository):$(tag)
