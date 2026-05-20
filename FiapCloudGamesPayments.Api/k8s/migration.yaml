@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: payments-migration
+spec:
+  ttlSecondsAfterFinished: 60
+  backoffLimit: 1
+  template:
+    spec:
+      containers:
+        - name: migration
+          image: fgcacr13245.azurecr.io/antniocarlodfiapcloudgamespaymentsapi:$(tag)
+          command: ["dotnet", "FiapCloudGamesPayments.Api.dll", "migrate"]
+          envFrom:
+            - configMapRef:
+                name: payments-api-config
+            - secretRef:
+                name: payments-api-secrets  
+      restartPolicy: Never

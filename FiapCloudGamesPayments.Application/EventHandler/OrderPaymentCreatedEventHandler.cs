@@ -18,8 +18,8 @@ namespace FiapCloudGamesPayments.Application.EventHandler
 
         public OrderPaymentCreatedEventHandler(IConfiguration configuration, ILogger<OrderPaymentCreatedEventHandler> logger)
         {
-            var client = new ServiceBusClient(configuration["ServiceBus:ConnectionString"]);
-            this._sender = client.CreateSender(configuration["ServiceBus:QueueName"]);
+            var client = new ServiceBusClient(configuration["AzureServiceBus:ConnectionString"]);
+            this._sender = client.CreateSender(configuration["AzureServiceBus:QueueName"]);
             this._logger = logger;
         }
 

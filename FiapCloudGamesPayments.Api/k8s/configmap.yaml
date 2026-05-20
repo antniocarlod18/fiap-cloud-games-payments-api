@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payments-api-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+
+  Authentication__Issuer: "https://users-api/autentication"
+  Authentication__Audience: "https://users-api/"
+
+  ElasticSearch__Uri: "http://elasticsearch:9200"
+  ElasticSearch__IndexName: "fiap-cloud-games-payments"
+  ElasticApm__ServerUrl: "http://apm-server:8200"
+
+  AzureServiceBus__QueueName: "payment-queue"
